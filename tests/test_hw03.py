@@ -1,9 +1,14 @@
 import pytest
-from main import dijkstra_shortest_path
+import sys, os
+
+# Ensure Python can import main.py from the parent folder
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import main
+print("Using main.py from:", main.__file__)  # Debug line
+from main import fastest_route
 
 
 # Normal tests (4)
-
 
 def test_simple_weighted_line():
     graph = {
@@ -11,7 +16,7 @@ def test_simple_weighted_line():
         "B": [("A", 3), ("C", 4)],
         "C": [("B", 4)],
     }
-    path, cost = dijkstra_shortest_path(graph, "A", "C")
+    path, cost = fastest_route(graph, "A", "C")
     assert path == ["A", "B", "C"]
     assert cost == 7
 
@@ -23,8 +28,7 @@ def test_choose_path_with_more_edges_but_lower_cost():
         "C": [("A", 2), ("D", 2)],
         "D": [("B", 2), ("C", 2)],
     }
-    path, cost = dijkstra_shortest_path(graph, "A", "D")
-    # Best path is A -> C -> D with cost 4
+    path, cost = fastest_route(graph, "A", "D")
     assert path[0] == "A" and path[-1] == "D"
     assert cost == 4
 
@@ -36,27 +40,23 @@ def test_small_square_graph():
         "C": [("A", 5), ("D", 1)],
         "D": [("B", 2), ("C", 1)],
     }
-    path, cost = dijkstra_shortest_path(graph, "A", "D")
+    path, cost = fastest_route(graph, "A", "D")
     assert cost == 3  # A -> B -> D
 
 
 def test_start_equals_goal():
-    graph = {
-        "A": [("B", 2)],
-        "B": [("A", 2)],
-    }
-    path, cost = dijkstra_shortest_path(graph, "A", "A")
+    graph = {"A": [("B", 2)], "B": [("A", 2)]}
+    path, cost = fastest_route(graph, "A", "A")
     assert path == ["A"]
     assert cost == 0
 
 
 # Edge-case tests (3)
 
-
 def test_missing_start_or_goal_returns_empty_and_none():
     graph = {"A": [("B", 1)], "B": [("A", 1)]}
-    assert dijkstra_shortest_path(graph, "X", "B") == ([], None)
-    assert dijkstra_shortest_path(graph, "A", "Y") == ([], None)
+    assert fastest_route(graph, "X", "B") == ([], None)
+    assert fastest_route(graph, "A", "Y") == ([], None)
 
 
 def test_unreachable_goal():
@@ -66,20 +66,19 @@ def test_unreachable_goal():
         "C": [("D", 2)],
         "D": [("C", 2)],
     }
-    path, cost = dijkstra_shortest_path(graph, "A", "D")
+    path, cost = fastest_route(graph, "A", "D")
     assert path == []
     assert cost is None
 
 
 def test_graph_with_single_node():
     graph = {"Solo": []}
-    path, cost = dijkstra_shortest_path(graph, "Solo", "Solo")
+    path, cost = fastest_route(graph, "Solo", "Solo")
     assert path == ["Solo"]
     assert cost == 0
 
 
 # Complex tests (3)
-
 
 def test_larger_graph_multiple_routes():
     graph = {
@@ -90,18 +89,19 @@ def test_larger_graph_multiple_routes():
         "D": [("B", 7), ("End", 1)],
         "End": [("C", 3), ("D", 1)],
     }
-    path, cost = dijkstra_shortest_path(graph, "Start", "End")
+    path, cost = fastest_route(graph, "Start", "End")
     assert path[0] == "Start"
     assert path[-1] == "End"
-    assert cost == 6  # Start -> A -> C -> End (2 + 4 + 3)
+    # Correct shortest path cost is 9
+    assert cost == 9
 
 
 @pytest.mark.parametrize(
     "start,goal,expected_cost",
     [
-        ("Start", "C", 3),
-        ("Start", "D", 10),
-        ("A", "End", 7),
+        ("Start", "C", 6),   # Correct cost
+        ("Start", "D", 10),  # Still valid
+        ("A", "End", 7),     # Still valid
     ],
 )
 def test_parametrized_shortest_costs(start, goal, expected_cost):
@@ -113,14 +113,13 @@ def test_parametrized_shortest_costs(start, goal, expected_cost):
         "D": [("B", 7), ("End", 1)],
         "End": [("C", 3), ("D", 1)],
     }
-    path, cost = dijkstra_shortest_path(graph, start, goal)
+    path, cost = fastest_route(graph, start, goal)
     assert path[0] == start
     assert path[-1] == goal
     assert cost == expected_cost
 
 
 def test_longer_chain_graph():
-    # A chain with varying weights
     graph = {
         "P1": [("P2", 1)],
         "P2": [("P1", 1), ("P3", 2)],
@@ -128,6 +127,6 @@ def test_longer_chain_graph():
         "P4": [("P3", 3), ("P5", 4)],
         "P5": [("P4", 4)],
     }
-    path, cost = dijkstra_shortest_path(graph, "P1", "P5")
+    path, cost = fastest_route(graph, "P1", "P5")
     assert path == ["P1", "P2", "P3", "P4", "P5"]
-    assert cost == 1 + 2 + 3 + 4
+    assert cost == 10
