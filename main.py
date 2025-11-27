@@ -2,7 +2,7 @@ import heapq
 
 def fastest_route(graph, start, goal):
     """
-    Compute the shortest path and cost between start and goal using Dijkstra's algorithm.
+    Compute the fastest route (shortest path) between start and goal.
     Graph format: {node: [(neighbor, weight), ...]}.
     Returns (path, cost). If unreachable, returns ([], None).
     """
@@ -15,12 +15,15 @@ def fastest_route(graph, start, goal):
     dist = {node: float("inf") for node in graph}
     dist[start] = 0
     parent = {start: None}
+
     pq = [(0, start)]
 
     while pq:
         cost, node = heapq.heappop(pq)
+
         if cost > dist[node]:
             continue
+
         for neighbor, weight in graph.get(node, []):
             new_cost = cost + weight
             if new_cost < dist[neighbor]:
